@@ -135,8 +135,10 @@ export async function evaluateSpeaking(
   // Step 1: Transcribe with Whisper (free on Groq)
   const { text, segments } = await transcribeAudio(audioBuffer, "audio.mp3");
 
-  if (!text || text.trim().length === 0) {
-    throw new Error("Could not transcribe any speech from the audio. Please check the recording.");
+  // Reject empty, silent, or meaningless transcriptions
+  const cleaned = text.trim().replace(/[\[\(].*?[\]\)]/g, "").trim();
+  if (!cleaned || cleaned.length < 10) {
+    throw new Error("No meaningful speech detected in the audio. Please record yourself speaking and try again.");
   }
 
   // Step 2: Evaluate with Llama 3.3 70B (free on Groq)
